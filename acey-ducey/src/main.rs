@@ -1,3 +1,5 @@
+// Implements Acey-Ducey, from Basic Computer Games (1978)
+
 use std::io;
 use rand::Rng;
 
@@ -16,10 +18,11 @@ enum Card {
     Ace,
 }
 
-fn bet_once(balance: i32) -> i32 {
-    // Contains logic for a bet.  Returns the amount that the player won or lost.
-    let mut card1: i32 = 0;
-    let mut card2: i32 = 0;
+fn choose_random_cards() -> (i32, i32) {
+    // Choose two random cards, ensuring that they're different and that card1 is
+    // lower-ranked than card2.
+    let mut card1: i32;
+    let mut card2: i32;
 
     loop {
         card1 = rand::thread_rng().gen_range(0, 12);
@@ -36,11 +39,18 @@ fn bet_once(balance: i32) -> i32 {
         card2 = swap;
     }
 
+    return (card1, card2);
+}
+
+fn request_bet(balance: i32, card_msg: String) -> i32 {
+    // Prompts the user for a bet amount.  Negative amounts aren't allowed, but zero is,
+    // and they can't bet more than their balance.
     let mut input = String::new();
-    let mut bet: i32 = 0;
+    let mut bet: i32;
 
     loop {
-        println!("Your cards are: {} and {}", card1, card2);
+        println!("\nYour balance is: ${}", balance);
+        println!("{}", card_msg);
 
         println!("How much would you like to bet?");
         io::stdin().read_line(&mut input).expect(
@@ -59,12 +69,24 @@ fn bet_once(balance: i32) -> i32 {
             println!("You can't bet more than your balance of ${}", balance);
             continue;
         } else {
+            // Bet amount passed our tests
             break;
         }
     }
 
-    // XXX not quite the right distribution
-    let mut card3: i32 = 0;
+    // Return the bet value
+    bet
+}
+
+
+fn bet_once(balance: i32) -> i32 {
+    // Contains logic for a bet.  Returns the amount that the player won or lost.
+    let (card1, card2) = choose_random_cards();
+
+    let bet = request_bet(balance, format!("Your cards are: {} and {}", card1, card2));
+
+    // XXX not quite the right distribution here -- oh well!
+    let mut card3: i32;
     loop {
         card3 = rand::thread_rng().gen_range(0, 12);
         if card1 == card3 || card2 == card3 {
@@ -90,11 +112,11 @@ fn main() {
     let mut bets_made = 0;
 
     println!("Let's play Acey-Ducey!");
-    // put explanation here
+    // put explanation of the game here
 
     while balance > 0 {
         let change = bet_once(balance);
-        if change > 0 {
+        if change >= 0 {
             println!("\nYou won ${}", change);
         } else {
             println!("\nYou lost ${}", 0 - change);
