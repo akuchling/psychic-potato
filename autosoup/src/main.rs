@@ -1,0 +1,85 @@
+
+use rand::Rng;
+
+#[derive(Debug)]
+struct Flib {
+    num_states: usize,
+    current_state: usize,
+    // Each state's transition table is an input symbol, and the
+    // number of the new state to transition to.
+    states: Vec<Vec<(char, usize)>>,
+}
+
+impl Flib {
+     fn transition(& mut self, input: char) -> char {
+         // Look for matching character in the state transition table
+	 // input should end up either 0 or 1.
+	 let input = (input as usize) - ('0' as usize);
+ 	 let (output, dest_state) = self.states[self.current_state][input];
+	 self.current_state = dest_state;
+	 return output;
+     }
+
+     fn as_chromosome(&self) -> String {
+     	let mut c = String::from("");
+        for state in &self.states {
+	     for transition in state {
+		c.push(transition.0);
+		c.push((('A' as u8) + (transition.1 as u8)) as char);
+	     }
+	}
+	return c;
+     }
+
+     fn randomize(& mut self, num_states: usize) {
+         // Create a random set of state transitions
+	 self.num_states = num_states;
+	 self.current_state = 0;
+	 self.states = vec![];
+
+	 for _i in 0..num_states {
+	     let mut new_state = vec![];
+	     for _j in 0..2 {
+	       new_state.push(
+	         (
+ 	          (('0' as u8) + rand::thread_rng().gen_range(0, 2)) as char,
+		  rand::thread_rng().gen_range(0, num_states)
+		 ));
+	      }
+	    self.states.push(new_state);
+	 }
+     }
+
+
+}
+
+fn main() {
+   // Test a flib that just echoes its environment
+   let mut flib = Flib {
+       num_states: 1,
+       current_state: 0,
+       states: vec![vec![('0', 0), ('1', 0)]],
+       };
+
+   println!("{} {} {}", flib.as_chromosome(), flib.transition('0'), flib.current_state);
+   println!("{} {} {}", flib.as_chromosome(), flib.transition('1'), flib.current_state);
+
+   // Test a flib with two states
+   let mut flib = Flib {
+       num_states: 1,
+       current_state: 0,
+       states: vec![vec![('0', 1), ('1', 1)],
+         	    vec![('1', 0), ('0', 0)]],
+       };
+
+   println!("{} {} {}", flib.as_chromosome(), flib.transition('0'), flib.current_state);
+   println!("{} {} {}", flib.as_chromosome(), flib.transition('0'), flib.current_state);
+
+   // Sequence of symbols representing the environment
+   //let environment = String::from("011001");
+
+   println!("{:?}", flib);
+   flib.randomize(5);
+   println!("{:?}", flib);
+
+}
