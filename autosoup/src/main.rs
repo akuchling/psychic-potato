@@ -68,6 +68,7 @@ impl Flib {
 
     }
 
+    // XXX It would be nice to make this a class method.
     fn randomize(&mut self, num_states: usize) {
         // Create a random set of state transitions
         self.num_states = num_states;
@@ -85,6 +86,31 @@ impl Flib {
             self.states.push(new_state);
         }
     }
+}
+
+fn output_population(heading: String, population: Vec<Flib>) {
+    println!("{}", heading);
+    for flib in population {
+        println!("{:?}", flib);
+    }
+}
+
+fn simulate() {
+    // Sequence of symbols representing the environment
+    let environment = String::from("011001");
+
+    // Create 10 flibs
+    let mut population = vec![];
+    for _i in 0..10 {
+    	let mut newflib = Flib {num_states: 0, current_state: 0, states: vec![]};
+	newflib.randomize(environment.len());
+    	population.push(newflib);
+    };
+
+    output_population("Initial population:".to_string(), population);
+
+    // XXX Score predictions based on the environment
+    // XXX Crossbreed some flibs
 }
 
 fn main() {
@@ -131,9 +157,6 @@ fn main() {
     flib.from_chromosome(flib.as_chromosome());
     println!("{} {}", flib.as_chromosome(), flib.current_state);
 
-    // Sequence of symbols representing the environment
-    //let environment = String::from("011001");
-
     println!("{:?}", flib);
     flib.randomize(5);
     println!("{:?}", flib);
@@ -142,4 +165,5 @@ fn main() {
     flib.from_chromosome(flib.as_chromosome());
     println!("{} {}", flib.as_chromosome(), flib.current_state);
 
+    simulate();
 }
