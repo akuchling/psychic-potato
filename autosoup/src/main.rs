@@ -1,6 +1,14 @@
 
 use rand::Rng;
 
+fn state_to_char(state: usize) -> char {
+    return (('A' as u8) + (state as u8)) as char;
+}
+
+fn char_to_state(ch: char) -> usize {
+   ((ch as u8) - ('A' as u8)) as usize
+}
+
 #[derive(Debug)]
 struct Flib {
     num_states: usize,
@@ -25,10 +33,35 @@ impl Flib {
         for state in &self.states {
 	     for transition in state {
 		c.push(transition.0);
-		c.push((('A' as u8) + (transition.1 as u8)) as char);
+		c.push(state_to_char(transition.1));
 	     }
 	}
 	return c;
+     }
+
+     fn from_chromosome(&mut self, chromosome: String) {
+     	self.current_state = 0;
+	// Each state occupies 4 characters, so the total number of
+	// states is just the length divided by 4.
+	self.num_states = (chromosome.chars().count()) / 4;
+
+        // Fill out the state vectors
+	self.states = vec![];
+
+	let mut it = chromosome.chars();
+
+	for _i in 0..self.num_states {
+	    // Get four characters from the iterator
+	    let output0 = it.next().expect("first character missing");
+	    let dest0 = it.next().expect("second character missing");
+	    let output1 = it.next().expect("third character missing");
+	    let dest1 = it.next().expect("fourth character missing");
+
+	    let transition = vec![(output0, char_to_state(dest0)),
+	                          (output1, char_to_state(dest1))];
+            self.states.push(transition);
+	}
+
      }
 
      fn randomize(& mut self, num_states: usize) {
@@ -75,11 +108,18 @@ fn main() {
    println!("{} {} {}", flib.as_chromosome(), flib.transition('0'), flib.current_state);
    println!("{} {} {}", flib.as_chromosome(), flib.transition('0'), flib.current_state);
 
+   flib.from_chromosome(flib.as_chromosome());
+   println!("{} {}", flib.as_chromosome(), flib.current_state);
+
    // Sequence of symbols representing the environment
    //let environment = String::from("011001");
 
    println!("{:?}", flib);
    flib.randomize(5);
    println!("{:?}", flib);
+
+   println!("{} {}", flib.as_chromosome(), flib.current_state);
+   flib.from_chromosome(flib.as_chromosome());
+   println!("{} {}", flib.as_chromosome(), flib.current_state);
 
 }
