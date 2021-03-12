@@ -30,6 +30,22 @@ impl Flib {
         return output;
     }
 
+    fn predict(&mut self, environment: &String) -> f32 {
+	let double_env = environment.to_owned() + &environment;
+	let mut matches = 0;
+        self.current_state = 0;
+	for ch in double_env.chars() {
+	     let prediction = self.transition(ch);
+	     // XXX wrong!  need to shift by 1!
+	     if prediction == ch {
+	        matches = matches + 1;
+	     }
+	}
+
+
+	return (matches as f32) / ((environment.len() * 2) as f32);
+    }
+
     fn as_chromosome(&self) -> String {
         let mut c = String::from("");
         for state in &self.states {
@@ -96,8 +112,14 @@ fn output_population(heading: String, population: &Vec<Flib>) {
     println!("");
 }
 
-fn score_population(population: &Vec<Flib>, environment: &String) -> Vec<f32> {
-    return vec![0.0, 0.0, 0.0];
+// Evaluate the entire population on how well they predict the environment
+fn score_population(population: &mut Vec<Flib>, environment: &String) -> Vec<f32> {
+    let mut scores: Vec<f32> = vec![];
+    for flib in population {
+    	scores.push(flib.predict(environment));
+    }
+
+    return scores;
 }
 
 fn simulate() -> Option<String> {
@@ -119,7 +141,8 @@ fn simulate() -> Option<String> {
         // Score predictions based on the environment.  The score is a
 	// decimal value between 0.0 and 1.0, where 1.0 is a perfect predictor
 	// and 0.0 would be a perfect anti-predictor.
-	let scores = score_population(&population, &environment);
+	let scores = score_population(&mut population, &environment);
+	println!("{:?}", scores);
 
         // Check if we have an exact match
 	if let Some(v) = find_element(scores, 1.0) {
