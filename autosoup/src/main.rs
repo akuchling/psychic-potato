@@ -1,4 +1,5 @@
 
+use std::iter::Iterator;
 use rand::Rng;
 
 // Convert a state # such as 1 into the matching character, like 'B'.
@@ -87,6 +88,7 @@ impl Flib {
     // XXX It would be nice to make this a class method.
     fn randomize(&mut self, num_states: usize) {
         // Create a random set of state transitions
+	// XXX could write this to produce a string and then use make_from_chromosome()
         self.num_states = num_states;
         self.current_state = 0;
         self.states = vec![];
@@ -102,6 +104,12 @@ impl Flib {
             self.states.push(new_state);
         }
     }
+}
+
+fn make_from_chromosome(chromosome: String) -> Flib {
+   let mut baby = Flib {num_states: 0, current_state: 0, states: vec![]};
+   baby.from_chromosome(chromosome);
+   return baby;
 }
 
 fn output_population(heading: String, population: &Vec<Flib>) {
@@ -120,6 +128,19 @@ fn score_population(population: &mut Vec<Flib>, environment: &String) -> Vec<f32
     }
 
     return scores;
+}
+
+fn random_combine(parent1: &String, parent2: &String) -> String {
+    let mut result = String::new();
+    let split = rand::thread_rng().gen_range(0, parent1.len());
+    for (i, (ch1, ch2)) in Iterator::enumerate(Iterator::zip(parent1.chars(), parent2.chars())) {
+        if i < split {
+	   result.push(ch1)
+        } else {
+	   result.push(ch2);
+	}
+    }
+    return result;
 }
 
 fn simulate() -> Option<String> {
@@ -145,12 +166,21 @@ fn simulate() -> Option<String> {
 	println!("{:?}", scores);
 
         // Check if we have an exact match
-	if let Some(v) = find_element(scores, 1.0) {
+	if let Some(v) = find_element(&scores, 1.0) {
 	    return Some(population[v].as_chromosome());
 	}
 
-        // XXX Cross breed some flibs
-	generation = generation + 1;
+        // Cross-breed the best and worst-scoring flibs, replacing
+	// the worst-scoring.
+	let (min_index, max_index) = find_minmax(&scores);
+	println!("Worst-scoring index: {} {}", min_index, scores[min_index]);
+	println!(" Best-scoring index: {} {}", max_index, scores[max_index]);
+	let embryo = random_combine(&population[min_index].as_chromosome(),
+	    	                    &population[max_index].as_chromosome());
+        println!("New chromosome: {}", embryo);
+        population[min_index].from_chromosome(embryo);
+
+        generation = generation + 1;
 
 	output_population(format!("Generation {}:", generation), &population);
     }
@@ -159,13 +189,33 @@ fn simulate() -> Option<String> {
 }
 
 // XXX It doesn't look like the Vec class has a method which returns this.
-fn find_element(vec: Vec<f32>, element: f32) -> Option<usize> {
+fn find_element(vec: &Vec<f32>, element: f32) -> Option<usize> {
    for i in 0..vec.len() {
        if vec[i] == element {
            return Some(i);
        }
    }
    return None;
+}
+
+// Find highest and lowest scores
+fn find_minmax(vec: &Vec<f32>) -> (usize, usize) {
+   let mut min_index: usize = 0;
+   let mut max_index: usize = 0;
+   let mut min_score = 1.0;
+   let mut max_score = 0.0;
+
+   for i in 0..vec.len() {
+       if vec[i] > max_score {
+           max_score = vec[i];
+	   max_index = i;
+       }
+       if vec[i] < min_score {
+           min_score = vec[i];
+	   min_index = i;
+       }
+   }
+   return (min_index, max_index);
 }
 
 
