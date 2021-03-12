@@ -88,30 +88,63 @@ impl Flib {
     }
 }
 
-fn output_population(heading: String, population: Vec<Flib>) {
+fn output_population(heading: String, population: &Vec<Flib>) {
     println!("{}", heading);
     for flib in population {
-        println!("{:?}", flib);
+        println!("{:?}", flib.as_chromosome());
     }
+    println!("");
 }
 
-fn simulate() {
+fn score_population(population: &Vec<Flib>, environment: &String) -> Vec<f32> {
+    return vec![0.0, 0.0, 0.0];
+}
+
+fn simulate() -> Option<String> {
     // Sequence of symbols representing the environment
     let environment = String::from("011001");
 
-    // Create 10 flibs
-    let mut population = vec![];
-    for _i in 0..10 {
+    // Create flibs
+    let population_size: i32 = 10;
+    let mut population: Vec<Flib> = vec![];
+    for _i in 0..population_size {
     	let mut newflib = Flib {num_states: 0, current_state: 0, states: vec![]};
 	newflib.randomize(environment.len());
     	population.push(newflib);
     };
 
-    output_population("Initial population:".to_string(), population);
+    output_population("Initial population:".to_string(), &population);
+    let mut generation = 0;
+    loop {
+        // Score predictions based on the environment.  The score is a
+	// decimal value between 0.0 and 1.0, where 1.0 is a perfect predictor
+	// and 0.0 would be a perfect anti-predictor.
+	let scores = score_population(&population, &environment);
 
-    // XXX Score predictions based on the environment
-    // XXX Crossbreed some flibs
+        // Check if we have an exact match
+	if let Some(v) = find_element(scores, 1.0) {
+	    return Some(population[v].as_chromosome());
+	}
+
+        // XXX Cross breed some flibs
+	generation = generation + 1;
+
+	output_population(format!("Generation {}:", generation), &population);
+    }
+
+    return None;
 }
+
+// XXX It doesn't look like the Vec class has a method which returns this.
+fn find_element(vec: Vec<f32>, element: f32) -> Option<usize> {
+   for i in 0..vec.len() {
+       if vec[i] == element {
+           return Some(i);
+       }
+   }
+   return None;
+}
+
 
 fn main() {
     // Test a flib that just echoes its environment
@@ -165,5 +198,9 @@ fn main() {
     flib.from_chromosome(flib.as_chromosome());
     println!("{} {}", flib.as_chromosome(), flib.current_state);
 
-    simulate();
+    let perfect = simulate();
+    match perfect {
+       Some(chromosome) => {println!("Perfect predictor: {}", chromosome);}
+       None => {println!("No perfect predictor found");}
+    }
 }
