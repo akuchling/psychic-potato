@@ -3,19 +3,22 @@
 use std::io;
 use rand::Rng;
 
-enum Card {
-    Two,
-    Three,
-    Four,
-    Five,
-    Six,
-    Seven,
-    Eight,
-    Nine,
-    Jack,
-    Queen,
-    King,
-    Ace,
+fn integer_to_card(value: i32) -> &'static str {
+    match value {
+        0 => "a Two",
+        1 => "a Three",
+        2 => "a Four",
+        3 => "a Five",
+        4 => "a Six",
+        5 => "a Seven",
+        6 => "an Eight",
+        7 => "a Nine",
+        8 => "a Jack",
+        9 => "a Queen",
+        10 => "a King",
+        11 => "an Ace",
+        _ => "Unknown",
+    }
 }
 
 fn choose_random_cards() -> (i32, i32) {
@@ -83,7 +86,14 @@ fn bet_once(balance: i32) -> i32 {
     // Contains logic for a bet.  Returns the amount that the player won or lost.
     let (card1, card2) = choose_random_cards();
 
-    let bet = request_bet(balance, format!("Your cards are: {} and {}", card1, card2));
+    let bet = request_bet(
+        balance,
+        format!(
+            "Your cards are: {} and {}",
+            integer_to_card(card1),
+            integer_to_card(card2)
+        ),
+    );
 
     // XXX not quite the right distribution here -- oh well!
     let mut card3: i32;
@@ -96,7 +106,7 @@ fn bet_once(balance: i32) -> i32 {
         }
     }
 
-    println!("The card that was drawn is {}", card3);
+    println!("The card that was drawn is {}", integer_to_card(card3));
     if card1 < card3 && card3 < card2 {
         println!("You win!");
         return bet;
