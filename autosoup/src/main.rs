@@ -1,4 +1,6 @@
 
+#[cfg(test)]
+
 use std::iter::Iterator;
 use rand::Rng;
 
@@ -218,8 +220,8 @@ fn find_minmax(vec: &Vec<f32>) -> (usize, usize) {
    return (min_index, max_index);
 }
 
-
-fn main() {
+#[test]
+fn test_echo_flib() {
     // Test a flib that just echoes its environment
     let mut flib = Flib {
         num_states: 1,
@@ -227,49 +229,57 @@ fn main() {
         states: vec![vec![('0', 0), ('1', 0)]],
     };
 
-    println!(
-        "{} {} {}",
-        flib.as_chromosome(),
-        flib.transition('0'),
-        flib.current_state
-    );
-    println!(
-        "{} {} {}",
-        flib.as_chromosome(),
-        flib.transition('1'),
-        flib.current_state
-    );
+    assert_eq!(flib.as_chromosome(), "0A1A");
 
+    // Input a 0 and 1, and check that we get a 0 or 1 back
+    assert_eq!(flib.transition('0'), '0');
+    assert_eq!(flib.transition('1'), '1');
+}
+
+#[test]
+fn test_flib_round_trip() {
+    // Test that a flib with two states round-trips to string and back.
+    let mut flib = Flib {
+        num_states: 1,
+        current_state: 0,
+        states: vec![vec![('0', 1), ('1', 1)], vec![('1', 0), ('0', 0)]],
+    };
+    assert_eq!(flib.as_chromosome(), "0B1B1A0A");
+
+    // After round-trip, the chromosome value should be the same
+    flib.from_chromosome(flib.as_chromosome());
+    assert_eq!(flib.as_chromosome(), "0B1B1A0A");
+}
+
+#[test]
+fn test_two_state_flib() {
     // Test a flib with two states
     let mut flib = Flib {
         num_states: 1,
         current_state: 0,
         states: vec![vec![('0', 1), ('1', 1)], vec![('1', 0), ('0', 0)]],
     };
+    assert_eq!(flib.as_chromosome(), "0B1B1A0A");
+    flib.transition('0');
+    assert_eq!(flib.current_state, 1);
+    flib.transition('0');
+    assert_eq!(flib.current_state, 0);
+}
 
-    println!(
-        "{} {} {}",
-        flib.as_chromosome(),
-        flib.transition('0'),
-        flib.current_state
-    );
-    println!(
-        "{} {} {}",
-        flib.as_chromosome(),
-        flib.transition('0'),
-        flib.current_state
-    );
+#[test]
+fn test_randomize_method() {
+    let mut flib = Flib {num_states: 1, current_state: 0, states: vec![]};
 
-    flib.from_chromosome(flib.as_chromosome());
-    println!("{} {}", flib.as_chromosome(), flib.current_state);
-
-    println!("{:?}", flib);
     flib.randomize(5);
-    println!("{:?}", flib);
+    assert_eq!(flib.num_states, 5);
+}
 
-    println!("{} {}", flib.as_chromosome(), flib.current_state);
-    flib.from_chromosome(flib.as_chromosome());
-    println!("{} {}", flib.as_chromosome(), flib.current_state);
+fn main() {
+    let mut flib = Flib {
+        num_states: 1,
+        current_state: 0,
+        states: vec![vec![('0', 1), ('1', 1)], vec![('1', 0), ('0', 0)]],
+    };
 
     let perfect = simulate();
     match perfect {
