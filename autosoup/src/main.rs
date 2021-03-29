@@ -170,26 +170,37 @@ fn random_combine(parent1: &String, parent2: &String) -> String {
     return result;
 }
 
-fn mutate_at_index(chromosome: String, index: usize) -> String {
-    return chromosome;
+fn mutate_at_index(chromosome: &String, random_position: usize) -> String {
+    let mut new_chromosome = String::new();
+
+    for (i, ch) in chromosome.chars().enumerate() {
+      if i != random_position {
+         new_chromosome.push(ch);
+      } else {
+	  if (i % 2) == 0 {
+	     // If we're mutating an even index, we'll flip a 0 to 1 or vice versa
+	     match ch {
+	       '0' => new_chromosome.push('1'),
+	       '1' => new_chromosome.push('0'),
+	       _ => panic!("unexpected character in chromosome"),
+	     }
+     	  } else {
+	     // If we're mutating an odd index, we'll pick a new state
+	     // We don't bother to check if we're picking the same
+	     // existing state.
+	     let num_states = chromosome.len() / 4;
+	     let new_state = rand::thread_rng().gen_range(0, num_states);
+	     new_chromosome.push(state_to_char(new_state));
+	  }
+      }
+    }
+
+    return new_chromosome;
 }
 
-fn mutate(chromosome: String) -> String {
+fn mutate(chromosome: &String) -> String {
     let random_position = rand::thread_rng().gen_range(0, chromosome.len());
     return mutate_at_index(chromosome, random_position);
-    /*
-   XXX Need to implement the actual logic here!
-
-   let prefix = new_chromosome.split_off(random_position);
-
-   if (random_position % 2) == 0 {
-      // If we're mutating an even index, we'll flip a 0 to 1 or vice versa
-      match
-      new_chromosome.replace_range(random_position..random_position+1,
-   } else {
-      // If we're mutating an odd index, we'll pick a new state
-   }
-*/
 }
 
 
@@ -233,13 +244,15 @@ fn simulate() -> Option<String> {
             &population[min_index].as_chromosome(),
             &population[max_index].as_chromosome(),
         );
-        println!("New chromosome: {}", embryo);
+        println!("New chromosome from crossing: {}", embryo);
         population[min_index].from_chromosome(embryo);
 
         let random_index = rand::thread_rng().gen_range(0, population.len());
         if random_index != max_index && random_index != min_index {
-            let mutant = mutate(population[random_index].as_chromosome());
-            println!("Mutating {} to {}", random_index, mutant);
+	    let subject = population[random_index].as_chromosome();
+            let mutant = mutate(&subject);
+            println!("Mutating #{} {} to {}", random_index, subject,
+	    		       mutant);
             population[random_index].from_chromosome(mutant);
         }
 
@@ -332,6 +345,13 @@ mod tests {
     fn test_flib_chromosome_wrong_length() {
 	// Test that supplying a chromosome whose length isn't a multiple of four will panic.
 	make_from_chromosome(String::from("0A1"));
+    }
+
+    #[test]
+    fn test_flib_mutation() {
+	// Test that mutation at least runs without panicking.
+	mutate_at_index(&String::from("0A1B1A0B"), 0);
+	mutate_at_index(&String::from("0A1B1A0B"), 1);
     }
 
     #[test]
