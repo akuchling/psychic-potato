@@ -23,7 +23,6 @@ struct Flib {
 }
 
 impl Flib {
-
     // Consume the input character `char`, outputting a response character and
     // updating the flib's internal state according to its transition table.
     fn transition(&mut self, input: char) -> char {
@@ -40,22 +39,22 @@ impl Flib {
     // that's the ratio of correct predictions: 1.00 would be a perfect predictor, and 0.00
     // would be a perfect anti-predictor.
     fn predict(&mut self, environment: &String) -> f32 {
-	// The predicted environment is two copies of the input
-	// environment, but shifted over by one character.
-	let double_env = environment.to_owned() + &environment;
-	let mut predicted_env = String::new();
-	{
-	    let mut it = environment.chars();
-	    let first_char = it.next().unwrap();
-	    for ch in it {
-		    predicted_env.push(ch);
-	    }
-	    predicted_env.push_str(&environment);  // Second copy
-	    predicted_env.push(first_char);
-	}
+        // The predicted environment is two copies of the input
+        // environment, but shifted over by one character.
+        let double_env = environment.to_owned() + &environment;
+        let mut predicted_env = String::new();
+        {
+            let mut it = environment.chars();
+            let first_char = it.next().unwrap();
+            for ch in it {
+                predicted_env.push(ch);
+            }
+            predicted_env.push_str(&environment); // Second copy
+            predicted_env.push(first_char);
+        }
 
-	// Feed the doubled environment into the Flib, and compare its
-	// predictions to the shifted environment.
+        // Feed the doubled environment into the Flib, and compare its
+        // predictions to the shifted environment.
         let mut matches = 0;
         self.current_state = 0;
         for (input, expected) in double_env.chars().zip(predicted_env.chars()) {
@@ -174,25 +173,25 @@ fn mutate_at_index(chromosome: &String, random_position: usize) -> String {
     let mut new_chromosome = String::new();
 
     for (i, ch) in chromosome.chars().enumerate() {
-      if i != random_position {
-         new_chromosome.push(ch);
-      } else {
-	  if (i % 2) == 0 {
-	     // If we're mutating an even index, we'll flip a 0 to 1 or vice versa
-	     match ch {
-	       '0' => new_chromosome.push('1'),
-	       '1' => new_chromosome.push('0'),
-	       _ => panic!("unexpected character in chromosome"),
-	     }
-     	  } else {
-	     // If we're mutating an odd index, we'll pick a new state
-	     // We don't bother to check if we're picking the same
-	     // existing state.
-	     let num_states = chromosome.len() / 4;
-	     let new_state = rand::thread_rng().gen_range(0, num_states);
-	     new_chromosome.push(state_to_char(new_state));
-	  }
-      }
+        if i != random_position {
+            new_chromosome.push(ch);
+        } else {
+            if (i % 2) == 0 {
+                // If we're mutating an even index, we'll flip a 0 to 1 or vice versa
+                match ch {
+                    '0' => new_chromosome.push('1'),
+                    '1' => new_chromosome.push('0'),
+                    _ => panic!("unexpected character in chromosome"),
+                }
+            } else {
+                // If we're mutating an odd index, we'll pick a new state
+                // We don't bother to check if we're picking the same
+                // existing state.
+                let num_states = chromosome.len() / 4;
+                let new_state = rand::thread_rng().gen_range(0, num_states);
+                new_chromosome.push(state_to_char(new_state));
+            }
+        }
     }
 
     return new_chromosome;
@@ -249,10 +248,9 @@ fn simulate() -> Option<String> {
 
         let random_index = rand::thread_rng().gen_range(0, population.len());
         if random_index != max_index && random_index != min_index {
-	    let subject = population[random_index].as_chromosome();
+            let subject = population[random_index].as_chromosome();
             let mutant = mutate(&subject);
-            println!("Mutating #{} {} to {}", random_index, subject,
-	    		       mutant);
+            println!("Mutating #{} {} to {}", random_index, subject, mutant);
             population[random_index].from_chromosome(mutant);
         }
 
@@ -297,12 +295,12 @@ fn find_minmax(vec: &Vec<f32>) -> (usize, usize) {
 fn main() {
     let perfect = simulate();
     match perfect {
-	Some(chromosome) => {
-	    println!("Perfect predictor: {}", chromosome);
-	}
-	None => {
-	    println!("No perfect predictor found");
-	}
+        Some(chromosome) => {
+            println!("Perfect predictor: {}", chromosome);
+        }
+        None => {
+            println!("No perfect predictor found");
+        }
     }
 }
 
@@ -312,72 +310,72 @@ mod tests {
 
     #[test]
     fn test_echo_flib() {
-	// Test a flib that just echoes its environment
-	let mut flib = Flib {
-	    num_states: 1,
-	    current_state: 0,
-	    states: vec![vec![('0', 0), ('1', 0)]],
-	};
+        // Test a flib that just echoes its environment
+        let mut flib = Flib {
+            num_states: 1,
+            current_state: 0,
+            states: vec![vec![('0', 0), ('1', 0)]],
+        };
 
-	assert_eq!(flib.as_chromosome(), "0A1A");
+        assert_eq!(flib.as_chromosome(), "0A1A");
 
-	// Input a 0 and 1, and check that we get a 0 or 1 back
-	assert_eq!(flib.transition('0'), '0');
-	assert_eq!(flib.transition('1'), '1');
+        // Input a 0 and 1, and check that we get a 0 or 1 back
+        assert_eq!(flib.transition('0'), '0');
+        assert_eq!(flib.transition('1'), '1');
     }
 
     #[test]
     fn test_flib_round_trip() {
-	// Test that a flib with two states round-trips to string and back.
-	let mut flib = Flib {
-	    num_states: 1,
-	    current_state: 0,
-	    states: vec![vec![('0', 1), ('1', 1)], vec![('1', 0), ('0', 0)]],
-	};
-	assert_eq!(flib.as_chromosome(), "0B1B1A0A");
+        // Test that a flib with two states round-trips to string and back.
+        let mut flib = Flib {
+            num_states: 1,
+            current_state: 0,
+            states: vec![vec![('0', 1), ('1', 1)], vec![('1', 0), ('0', 0)]],
+        };
+        assert_eq!(flib.as_chromosome(), "0B1B1A0A");
 
-	// After round-trip, the chromosome value should be the same
-	flib.from_chromosome(flib.as_chromosome());
-	assert_eq!(flib.as_chromosome(), "0B1B1A0A");
+        // After round-trip, the chromosome value should be the same
+        flib.from_chromosome(flib.as_chromosome());
+        assert_eq!(flib.as_chromosome(), "0B1B1A0A");
     }
 
     #[test]
     fn test_flib_chromosome_wrong_length() {
-	// Test that supplying a chromosome whose length isn't a multiple of four will panic.
-	make_from_chromosome(String::from("0A1"));
+        // Test that supplying a chromosome whose length isn't a multiple of four will panic.
+        make_from_chromosome(String::from("0A1"));
     }
 
     #[test]
     fn test_flib_mutation() {
-	// Test that mutation at least runs without panicking.
-	mutate_at_index(&String::from("0A1B1A0B"), 0);
-	mutate_at_index(&String::from("0A1B1A0B"), 1);
+        // Test that mutation at least runs without panicking.
+        mutate_at_index(&String::from("0A1B1A0B"), 0);
+        mutate_at_index(&String::from("0A1B1A0B"), 1);
     }
 
     #[test]
     fn test_two_state_flib() {
-	// Test a flib with two states
-	let mut flib = Flib {
-	    num_states: 1,
-	    current_state: 0,
-	    states: vec![vec![('0', 1), ('1', 1)], vec![('1', 0), ('0', 0)]],
-	};
-	assert_eq!(flib.as_chromosome(), "0B1B1A0A");
-	flib.transition('0');
-	assert_eq!(flib.current_state, 1);
-	flib.transition('0');
-	assert_eq!(flib.current_state, 0);
+        // Test a flib with two states
+        let mut flib = Flib {
+            num_states: 1,
+            current_state: 0,
+            states: vec![vec![('0', 1), ('1', 1)], vec![('1', 0), ('0', 0)]],
+        };
+        assert_eq!(flib.as_chromosome(), "0B1B1A0A");
+        flib.transition('0');
+        assert_eq!(flib.current_state, 1);
+        flib.transition('0');
+        assert_eq!(flib.current_state, 0);
     }
 
     #[test]
     fn test_randomize_method() {
-	let mut flib = Flib {
-	    num_states: 1,
-	    current_state: 0,
-	    states: vec![],
-	};
+        let mut flib = Flib {
+            num_states: 1,
+            current_state: 0,
+            states: vec![],
+        };
 
-	flib.randomize(5);
-	assert_eq!(flib.num_states, 5);
+        flib.randomize(5);
+        assert_eq!(flib.num_states, 5);
     }
 }
