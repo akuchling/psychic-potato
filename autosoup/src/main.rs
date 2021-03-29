@@ -2,16 +2,17 @@
 use std::iter::Iterator;
 use rand::Rng;
 
-// Convert a state # such as 1 into the matching character, like 'B'.
+// Convert the integer number `state` into the matching character; for example, 1 maps to 'B'.
 fn state_to_char(state: usize) -> char {
     return (('A' as u8) + (state as u8)) as char;
 }
 
-// Convert a character like 'B' into a state # like 1.
+// Convert a character `char` such as 'B' into a state # like 1.
 fn char_to_state(ch: char) -> usize {
     ((ch as u8) - ('A' as u8)) as usize
 }
 
+// Structure representing a single automaton.
 #[derive(Debug)]
 struct Flib {
     num_states: usize,
@@ -22,6 +23,9 @@ struct Flib {
 }
 
 impl Flib {
+
+    // Consume the input character `char`, outputting a response character and
+    // updating the flib's internal state according to its transition table.
     fn transition(&mut self, input: char) -> char {
         // Look for matching character in the state transition table.
         // input should end up either 0 or 1.
@@ -31,22 +35,40 @@ impl Flib {
         return output;
     }
 
+    // Given an environment string, initialize the Flib to its starting state and then
+    // assess how well it predicted the environment.  Returns a floating-point number
+    // that's the ratio of correct predictions: 1.00 would be a perfect predictor, and 0.00
+    // would be a perfect anti-predictor.
     fn predict(&mut self, environment: &String) -> f32 {
-        let double_env = environment.to_owned() + &environment;
+	// The predicted environment is two copies of the input
+	// environment, but shifted over by one character.
+	let double_env = environment.to_owned() + &environment;
+	let mut predicted_env = String::new();
+	{
+	    let mut it = environment.chars();
+	    let first_char = it.next().unwrap();
+	    for ch in it {
+		    predicted_env.push(ch);
+	    }
+	    predicted_env.push_str(&environment);  // Second copy
+	    predicted_env.push(first_char);
+	}
+
+	// Feed the doubled environment into the Flib, and compare its
+	// predictions to the shifted environment.
         let mut matches = 0;
         self.current_state = 0;
-        for ch in double_env.chars() {
-            let prediction = self.transition(ch);
-            // XXX wrong!  need to shift by 1!
-            if prediction == ch {
+        for (input, expected) in double_env.chars().zip(predicted_env.chars()) {
+            let prediction = self.transition(input);
+            if prediction == expected {
                 matches = matches + 1;
             }
         }
 
-
         return (matches as f32) / ((environment.len() * 2) as f32);
     }
 
+    // Return a string representation of the Flib's transition table.
     fn as_chromosome(&self) -> String {
         let mut c = String::from("");
         for state in &self.states {
@@ -58,6 +80,7 @@ impl Flib {
         return c;
     }
 
+    // Replace the Flib's transition table with the table given by the specified chromosome string.
     fn from_chromosome(&mut self, chromosome: String) {
         self.current_state = 0;
         // Each state occupies 4 characters, so the total number of
@@ -303,6 +326,12 @@ mod tests {
 	// After round-trip, the chromosome value should be the same
 	flib.from_chromosome(flib.as_chromosome());
 	assert_eq!(flib.as_chromosome(), "0B1B1A0A");
+    }
+
+    #[test]
+    fn test_flib_chromosome_wrong_length() {
+	// Test that supplying a chromosome whose length isn't a multiple of four will panic.
+	make_from_chromosome(String::from("0A1"));
     }
 
     #[test]
