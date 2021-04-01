@@ -216,7 +216,7 @@ fn simulate() -> Option<String> {
             current_state: 0,
             states: vec![],
         };
-        newflib.randomize(environment.len());
+        newflib.randomize(environment.len() / 2 + 1);
         population.push(newflib);
     }
 
